@@ -1,13 +1,11 @@
 package com.example.nospoilernhl.ui;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.MotionEvent;
-import android.view.View;
+import android.widget.MediaController;
 import android.widget.VideoView;
 
 import com.example.nospoilernhl.R;
@@ -18,7 +16,6 @@ public class VideoActivity extends Activity implements MediaPlayer.OnCompletionL
 {
     private VideoView videoView;
 
-    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onCreate(Bundle b)
     {
@@ -32,8 +29,11 @@ public class VideoActivity extends Activity implements MediaPlayer.OnCompletionL
         }
         videoView = findViewById(R.id.myvideoview);
         videoView.setOnCompletionListener(this);
-        videoView.setOnPreparedListener(mp -> mp.setLooping(true));
-        videoView.setOnTouchListener(VideoActivity::onTouch);
+        videoView.setOnPreparedListener(mp -> mp.setLooping(false));
+
+        final MediaController mediaController = new MediaController(this.videoView.getContext());
+        mediaController.setAnchorView(videoView);
+        videoView.setMediaController(mediaController);
 
         if (!playFileRes(videoPath)) return;
         videoView.start();
@@ -53,7 +53,7 @@ public class VideoActivity extends Activity implements MediaPlayer.OnCompletionL
         }
     }
 
-    public void stopPlaying()
+    private void stopPlaying()
     {
         videoView.stopPlayback();
         this.finish();
@@ -63,16 +63,6 @@ public class VideoActivity extends Activity implements MediaPlayer.OnCompletionL
     public void onCompletion(final MediaPlayer mediaPlayer)
     {
         finish();
-    }
-
-    private static boolean onTouch(View view, MotionEvent motionEvent) {
-
-        if (((VideoView) view).isPlaying()) {
-            ((VideoView) view).pause();
-        } else {
-            ((VideoView) view).start();
-        }
-        return true;
     }
 
     @Override

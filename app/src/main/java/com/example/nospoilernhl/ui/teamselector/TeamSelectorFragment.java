@@ -10,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -29,6 +30,8 @@ public class TeamSelectorFragment extends Fragment
     private TeamSelectorViewModel viewModel;
 
     private Spinner teamSpinner;
+
+    private Team currentSelectedTeam;
 
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -67,6 +70,7 @@ public class TeamSelectorFragment extends Fragment
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 final Team selectedTeam = (Team) parent.getItemAtPosition(position);
                 viewModel.updateTeam(selectedTeam);
+                currentSelectedTeam = selectedTeam;
             }
 
             @Override
@@ -81,7 +85,7 @@ public class TeamSelectorFragment extends Fragment
         final String videoPath = viewModel.getCurrentGameUri().getValue();
         if (StringUtils.isBlank(videoPath))
         {
-            //TODO: Raise a toast here.
+            showToast();
             Log.w("TeamSelectorFragment", "Could not find game highlights for selected team");
             return;
         }
@@ -89,5 +93,13 @@ public class TeamSelectorFragment extends Fragment
         final Intent videoActivity = new Intent(getActivity(), VideoActivity.class);
         videoActivity.putExtra("videoPath", videoPath);
         startActivity(videoActivity);
+    }
+
+    private void showToast()
+    {
+        final Toast toast = Toast.makeText(getContext(),
+                String.format("No recent game found for %s", currentSelectedTeam.getTeamName()),
+                Toast.LENGTH_LONG);
+        toast.show();
     }
 }
