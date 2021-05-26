@@ -79,12 +79,11 @@ public class GameRepository
                                                         .flatMap(List::stream)
                                                         .filter(game1 -> game1.getStatus().getAbstractGameState().equals("Final"))
                                                         .findFirst()
-                                                        .orElse(new Game());
-                        if (newGame.getGamePk() != null)
-                        {
-                            game.postValue(newGame);
-                            updateContent(newGame.getGamePk());
-                        }
+                                                        .orElse(new Game().toBuilder()
+                                                                          .gamePk("")
+                                                                          .build());
+                        game.postValue(newGame);
+                        updateContent(newGame.getGamePk());
                     }
 
                     @Override
@@ -102,15 +101,13 @@ public class GameRepository
                 new Callback<Content>() {
                     @Override
                     public void onResponse(Call<Content> call, Response<Content> response) {
-                        if (response.body() == null)
+                        if (response.code() == 404 || response.body() == null)
                         {
+                            gameHighlightsUri.postValue("");
                             return;
                         }
                         final String newUri = getHighlightFrom(response.body());
-                        if (!newUri.isEmpty())
-                        {
-                            gameHighlightsUri.postValue(newUri);
-                        }
+                        gameHighlightsUri.postValue(newUri);
                     }
 
                     @Override
