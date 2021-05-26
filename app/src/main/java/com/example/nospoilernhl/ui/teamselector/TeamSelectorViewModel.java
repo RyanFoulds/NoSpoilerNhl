@@ -18,12 +18,16 @@ public class TeamSelectorViewModel extends AndroidViewModel
     @Getter
     private MutableLiveData<List<Team>> teams;
 
+    @Getter
+    private MutableLiveData<String> currentGameUri;
+
     private GameRepository gameRepository;
 
     public TeamSelectorViewModel(final Application application)
     {
         super(application);
         teams = TeamsRepository.getInstance().getTeams();
+        currentGameUri = GameRepository.getInstance().getGameHighlightsUri();
         gameRepository = GameRepository.getInstance();
         TeamsRepository.getInstance().searchTeams();
     }
