@@ -31,7 +31,7 @@ public class VideoActivity extends Activity implements MediaPlayer.OnCompletionL
         videoView.setOnCompletionListener(this);
         videoView.setOnPreparedListener(mp -> mp.setLooping(false));
 
-        final MediaController mediaController = new MediaController(this.videoView.getContext());
+        final MediaController mediaController = new MediaController(this);
         mediaController.setAnchorView(videoView);
         videoView.setMediaController(mediaController);
 
