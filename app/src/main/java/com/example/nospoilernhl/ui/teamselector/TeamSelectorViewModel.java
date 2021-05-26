@@ -16,16 +16,20 @@ import lombok.Getter;
 public class TeamSelectorViewModel extends AndroidViewModel
 {
     @Getter
-    private MutableLiveData<List<Team>> teams;
+    private final MutableLiveData<List<Team>> teams;
 
     @Getter
-    private MutableLiveData<String> currentGameUri;
+    private final MutableLiveData<String> currentGameUri;
 
-    private GameRepository gameRepository;
+    @Getter
+    private final MutableLiveData<Team> currentSelectedTeam;
+
+    private final GameRepository gameRepository;
 
     public TeamSelectorViewModel(final Application application)
     {
         super(application);
+        currentSelectedTeam = new MutableLiveData<>();
         teams = TeamsRepository.getInstance().getTeams();
         currentGameUri = GameRepository.getInstance().getGameHighlightsUri();
         gameRepository = GameRepository.getInstance();

@@ -18,10 +18,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class TeamsRepository
 {
-    private NhlApi nhlApi;
+    private final NhlApi nhlApi;
 
     @Getter
-    private MutableLiveData<List<Team>> teams;
+    private final MutableLiveData<List<Team>> teams;
 
     private static TeamsRepository instance;
 

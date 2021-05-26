@@ -27,12 +27,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class GameRepository
 {
-    private NhlApi api;
+    private final NhlApi api;
 
     @Getter
-    private MutableLiveData<String> gameHighlightsUri;
+    private final MutableLiveData<String> gameHighlightsUri;
     @Getter
-    private MutableLiveData<Game> game;
+    private final MutableLiveData<Game> game;
 
     private static final String HIGHLIGHT_TITLE = "Extended Highlights";
 

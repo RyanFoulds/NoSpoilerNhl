@@ -10,4 +10,6 @@
     <string name="team_selector_fragment_label">Team Selector</string>
 
     <string name="watch_button_label">Watch!</string>
+
+    <string name="team_logo_image_description">Team Logo</string>
 </resources>

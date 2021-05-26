@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -31,8 +32,7 @@ public class TeamSelectorFragment extends Fragment
 
     private Spinner teamSpinner;
 
-    private Team currentSelectedTeam;
-
+    private ImageView logo;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState)
@@ -40,12 +40,16 @@ public class TeamSelectorFragment extends Fragment
         viewModel = ViewModelProviders.of(this).get(TeamSelectorViewModel.class);
         View root = inflater.inflate(R.layout.fragment_team_selector, container, false);
 
+        logo = root.findViewById(R.id.logoView);
+
         teamSpinner = root.findViewById(R.id.team_selector);
         observeViewModel();
         viewModel.refresh();
 
         final Button watchButton = root.findViewById(R.id.watch_button);
         watchButton.setOnClickListener(this::playVideoFullScreen);
+
+        viewModel.getCurrentSelectedTeam().observe(this, this::updateLogo);
 
         registerOnClickListener();
         return root;
@@ -70,7 +74,7 @@ public class TeamSelectorFragment extends Fragment
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 final Team selectedTeam = (Team) parent.getItemAtPosition(position);
                 viewModel.updateTeam(selectedTeam);
-                currentSelectedTeam = selectedTeam;
+                viewModel.getCurrentSelectedTeam().postValue(selectedTeam);
             }
 
             @Override
@@ -97,9 +101,16 @@ public class TeamSelectorFragment extends Fragment
 
     private void showToast()
     {
+        final Team currentTeam = viewModel.getCurrentSelectedTeam().getValue();
         final Toast toast = Toast.makeText(getContext(),
-                String.format("No recent game found for %s", currentSelectedTeam.getTeamName()),
+                String.format("No recent game found for %s",
+                        currentTeam == null ? "" : currentTeam.getTeamName()),
                 Toast.LENGTH_LONG);
         toast.show();
+    }
+
+    private void updateLogo(final Team team)
+    {
+        // TODO: implement populating logo with image.
     }
 }
