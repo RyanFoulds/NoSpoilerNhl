@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">NoSpoilerNhl</string>
+    <string name="app_name">Hockey Highlights</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">No Spoilers NHL</string>
-    <string name="nav_header_subtitle">Built by Ryan Foulds</string>
+    <string name="nav_header_title">Hockey Highlights</string>
+    <string name="nav_header_subtitle">No affiliation with the NHL</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
