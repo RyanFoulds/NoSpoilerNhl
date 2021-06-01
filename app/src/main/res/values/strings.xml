@@ -3,7 +3,7 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Hockey Highlights</string>
-    <string name="nav_header_subtitle">No affiliation with the NHL</string>
+    <string name="nav_header_subtitle">NHL team names and highlight videos are the property of the National Hockey League, this app has no affiliation with the NHL and does not host any such content.</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
