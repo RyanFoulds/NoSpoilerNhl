@@ -30,10 +30,11 @@ public class TeamSelectorViewModel extends AndroidViewModel
     {
         super(application);
         currentSelectedTeam = new MutableLiveData<>();
-        teams = TeamsRepository.getInstance().getTeams();
+        final TeamsRepository teamsRepository = TeamsRepository.getInstance(application.getApplicationContext());
+        teams = teamsRepository.getTeams();
         currentGameUri = GameRepository.getInstance().getGameHighlightsUri();
         gameRepository = GameRepository.getInstance();
-        TeamsRepository.getInstance().searchTeams();
+        teamsRepository.searchTeams();
     }
 
     public void updateTeam(final Team team)
@@ -42,6 +43,8 @@ public class TeamSelectorViewModel extends AndroidViewModel
     }
 
     public void refresh(){
-        TeamsRepository.getInstance().searchTeams();
+        // Should already have an instance of TeamsRepository by the time this is called,
+        // so the null application context shouldn't matter.
+        TeamsRepository.getInstance(null).searchTeams();
     }
 }

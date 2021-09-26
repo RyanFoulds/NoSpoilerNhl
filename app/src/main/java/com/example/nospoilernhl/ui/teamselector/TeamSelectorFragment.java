@@ -80,6 +80,10 @@ public class TeamSelectorFragment extends Fragment
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 Log.i("team_selector", "No team selected");
+                if (Objects.requireNonNull(viewModel.getTeams().getValue()).isEmpty())
+                {
+                    viewModel.refresh();
+                }
             }
         });
     }
