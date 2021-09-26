@@ -133,9 +133,4 @@ public class GameRepository
                 .findFirst()
                 .orElse("");
     }
-
-    private MediaItem dummyMediaItem()
-    {
-        return new MediaItem("DUMMY", Collections.emptyList());
-    }
 }
