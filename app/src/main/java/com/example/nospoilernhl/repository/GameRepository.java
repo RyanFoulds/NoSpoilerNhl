@@ -17,7 +17,6 @@ import com.google.gson.GsonBuilder;
 
 import java.text.DateFormat;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 import lombok.Getter;
