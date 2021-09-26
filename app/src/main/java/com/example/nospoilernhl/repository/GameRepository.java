@@ -10,6 +10,7 @@ import com.example.nospoilernhl.model.Game;
 import com.example.nospoilernhl.model.Schedule;
 import com.example.nospoilernhl.model.Team;
 import com.example.nospoilernhl.model.gamecontent.Content;
+import com.example.nospoilernhl.model.gamecontent.MediaItem;
 import com.example.nospoilernhl.model.gamecontent.Playback;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -121,8 +122,9 @@ public class GameRepository
     private String getHighlightFrom(final Content content)
     {
         return content.getMedia().getEpg().stream()
-                .filter(epgObject -> epgObject.getTitle().equalsIgnoreCase(HIGHLIGHT_TITLE))
-                .flatMap(epgObject -> epgObject.getItems().get(0).getPlaybacks().stream())
+                .filter(epg -> epg.getTitle().equalsIgnoreCase(HIGHLIGHT_TITLE))
+                .map(epg -> epg.getItems().stream().findFirst().orElse(MediaItem.dummy()))
+                .flatMap(mediaItem -> mediaItem.getPlaybacks().stream())
                 .filter(playback -> playback.getName().contains("FLASH"))
                 .sorted((p1, p2) -> Integer.compare(p2.getBitRate(), p1.getBitRate()))
                 .peek(item -> Log.d("game repo", item.getName()))
