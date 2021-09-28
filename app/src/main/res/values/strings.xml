@@ -1,15 +1,15 @@
 <resources>
-    <string name="app_name">NoSpoilerNhl</string>
+    <string name="app_name">Hockey Highlights</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">No Spoilers NHL</string>
-    <string name="nav_header_subtitle">Built by Ryan Foulds</string>
+    <string name="nav_header_title">Hockey Highlights</string>
+    <string name="nav_header_subtitle">NHL team names and highlight videos are the property of the National Hockey League, this app has no affiliation with the NHL and does not host any such content.</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
-    <string name="menu_home">Game Recaps</string>
     <string name="team_selector_fragment_label">Team Selector</string>
 
-    <string name="home_second">Home Second</string>
-    <string name="default_video_label">video_label</string>
+    <string name="watch_button_label">Watch!</string>
+
+    <string name="team_logo_image_description">Team Logo</string>
 </resources>

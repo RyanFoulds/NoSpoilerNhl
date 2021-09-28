@@ -10,6 +10,7 @@ import com.example.nospoilernhl.model.Game;
 import com.example.nospoilernhl.model.Schedule;
 import com.example.nospoilernhl.model.Team;
 import com.example.nospoilernhl.model.gamecontent.Content;
+import com.example.nospoilernhl.model.gamecontent.MediaItem;
 import com.example.nospoilernhl.model.gamecontent.Playback;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -27,12 +28,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class GameRepository
 {
-    private NhlApi api;
+    private final NhlApi api;
 
     @Getter
-    private MutableLiveData<String> gameHighlightsUri;
+    private final MutableLiveData<String> gameHighlightsUri;
     @Getter
-    private MutableLiveData<Game> game;
+    private final MutableLiveData<Game> game;
 
     private static final String HIGHLIGHT_TITLE = "Extended Highlights";
 
@@ -79,12 +80,11 @@ public class GameRepository
                                                         .flatMap(List::stream)
                                                         .filter(game1 -> game1.getStatus().getAbstractGameState().equals("Final"))
                                                         .findFirst()
-                                                        .orElse(new Game());
-                        if (newGame.getGamePk() != null)
-                        {
-                            game.postValue(newGame);
-                            updateContent(newGame.getGamePk());
-                        }
+                                                        .orElse(new Game().toBuilder()
+                                                                          .gamePk("")
+                                                                          .build());
+                        game.postValue(newGame);
+                        updateContent(newGame.getGamePk());
                     }
 
                     @Override
@@ -102,15 +102,13 @@ public class GameRepository
                 new Callback<Content>() {
                     @Override
                     public void onResponse(Call<Content> call, Response<Content> response) {
-                        if (response.body() == null)
+                        if (response.code() == 404 || response.body() == null)
                         {
+                            gameHighlightsUri.postValue("");
                             return;
                         }
                         final String newUri = getHighlightFrom(response.body());
-                        if (!newUri.isEmpty())
-                        {
-                            gameHighlightsUri.postValue(newUri);
-                        }
+                        gameHighlightsUri.postValue(newUri);
                     }
 
                     @Override
@@ -124,8 +122,9 @@ public class GameRepository
     private String getHighlightFrom(final Content content)
     {
         return content.getMedia().getEpg().stream()
-                .filter(epgObject -> epgObject.getTitle().equalsIgnoreCase(HIGHLIGHT_TITLE))
-                .flatMap(epgObject -> epgObject.getItems().get(0).getPlaybacks().stream())
+                .filter(epg -> epg.getTitle().equalsIgnoreCase(HIGHLIGHT_TITLE))
+                .map(epg -> epg.getItems().stream().findFirst().orElse(MediaItem.dummy()))
+                .flatMap(mediaItem -> mediaItem.getPlaybacks().stream())
                 .filter(playback -> playback.getName().contains("FLASH"))
                 .sorted((p1, p2) -> Integer.compare(p2.getBitRate(), p1.getBitRate()))
                 .peek(item -> Log.d("game repo", item.getName()))
