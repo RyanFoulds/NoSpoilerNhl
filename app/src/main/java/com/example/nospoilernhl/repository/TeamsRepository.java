@@ -54,7 +54,7 @@ public class TeamsRepository
     {
         teams = new MutableLiveData<>();
 
-        cache = new Cache(context.getCacheDir(), cacheSize);
+        cache = new Cache(context.getFilesDir(), cacheSize);
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .cache(cache)
                 .addInterceptor(chain -> {
