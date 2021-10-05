@@ -33,7 +33,7 @@ public class TeamSelectorViewModel extends AndroidViewModel
         super(application);
         currentSelectedTeam = new MutableLiveData<>();
 
-        gameRepository = GameRepository.getInstance();
+        gameRepository = GameRepository.getInstance(application.getApplicationContext());
         currentGameUri = gameRepository.getGameHighlightsUri();
 
         teamsRepository = TeamsRepository.getInstance(application.getApplicationContext());

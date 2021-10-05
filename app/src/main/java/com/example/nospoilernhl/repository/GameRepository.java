@@ -1,9 +1,11 @@
 package com.example.nospoilernhl.repository;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.nospoilernhl.api.ApiUtils;
 import com.example.nospoilernhl.api.NhlApi;
 import com.example.nospoilernhl.model.Date;
 import com.example.nospoilernhl.model.Game;
@@ -20,7 +22,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import lombok.Getter;
+import okhttp3.Cache;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -39,21 +43,36 @@ public class GameRepository
 
     private static GameRepository instance;
 
-    public static GameRepository getInstance()
+    private static final Long cacheSize = (long) (5 * 1024 * 1024);
+
+    public static GameRepository getInstance(final Context context)
     {
         if (instance == null)
         {
-            instance = new GameRepository();
+            instance = new GameRepository(context);
         }
         return instance;
     }
 
     private GameRepository()
     {
+        // Do not instantiate this way.
+        this.api = null;
+        this.gameHighlightsUri = null;
+        this.game = null;
+    }
+
+    private GameRepository(final Context context)
+    {
         gameHighlightsUri = new MutableLiveData<>();
         game = new MutableLiveData<>();
 
-        OkHttpClient client = new OkHttpClient().newBuilder().build();
+        final Cache cache = new Cache(context.getFilesDir(), cacheSize);
+
+        final OkHttpClient client = new OkHttpClient().newBuilder()
+                .cache(cache)
+                .addInterceptor(ApiUtils.getCacheInterceptor(context, 60 * 30, 60 * 60 * 12))
+                .build();
 
         Gson gson = new GsonBuilder().setDateFormat(DateFormat.DATE_FIELD).create();
         api = new retrofit2.Retrofit.Builder()
