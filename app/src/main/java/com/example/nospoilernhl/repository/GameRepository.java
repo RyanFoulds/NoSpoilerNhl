@@ -102,7 +102,7 @@ public class GameRepository
                 new Callback<Content>() {
                     @Override
                     public void onResponse(Call<Content> call, Response<Content> response) {
-                        if (response.code() == 404 || response.body() == null)
+                        if (!response.isSuccessful() || response.body() == null)
                         {
                             gameHighlightsUri.postValue("");
                             return;
