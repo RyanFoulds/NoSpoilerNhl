@@ -72,6 +72,8 @@ public class GameRepository
                     public void onResponse(Call<Schedule> call, Response<Schedule> response) {
                         if (response.body() == null)
                         {
+                            game.postValue(null);
+                            updateContent("");
                             return;
                         }
                         final Game newGame = response.body().getDates().stream()
@@ -89,6 +91,8 @@ public class GameRepository
 
                     @Override
                     public void onFailure(Call<Schedule> call, Throwable t) {
+                        game.postValue(null);
+                        updateContent("");
                         Log.e("Game repo", "failed to process schedule", t);
                     }
                 }
@@ -97,6 +101,12 @@ public class GameRepository
 
     private void updateContent(final String gameId)
     {
+        if (gameId == null || gameId.isEmpty())
+        {
+            gameHighlightsUri.postValue("");
+            Log.e("GameRepository", "gameId was null or empty, couldn't update game highlights uri.");
+            return;
+        }
         // Get the content for the provided gameId and update the video uri
         api.getGameContent(gameId).enqueue(
                 new Callback<Content>() {
@@ -113,6 +123,7 @@ public class GameRepository
 
                     @Override
                     public void onFailure(Call<Content> call, Throwable t) {
+                        gameHighlightsUri.postValue("");
                         Log.e("Game repo", "failed to process content", t);
                     }
                 }
