@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.nospoilernhl.R;
@@ -34,6 +35,8 @@ public class TeamSelectorFragment extends Fragment
 
     private ImageView logo;
 
+    private Button watchButton;
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState)
     {
@@ -46,10 +49,9 @@ public class TeamSelectorFragment extends Fragment
         observeViewModel();
         viewModel.refresh();
 
-        final Button watchButton = root.findViewById(R.id.watch_button);
+        watchButton = root.findViewById(R.id.watch_button);
         watchButton.setOnClickListener(this::playVideoFullScreen);
-
-        viewModel.getCurrentSelectedTeam().observe(this, this::updateLogo);
+        viewModel.getCurrentGameUri().observe(this, this::updateButton);
 
         registerOnClickListener();
         return root;
@@ -107,6 +109,11 @@ public class TeamSelectorFragment extends Fragment
                         currentTeam == null ? "" : currentTeam.getTeamName()),
                 Toast.LENGTH_LONG);
         toast.show();
+    }
+
+    private void updateButton(final String gameUri)
+    {
+        watchButton.setEnabled(gameUri != null && !gameUri.isEmpty());
     }
 
     private void updateLogo(final Team team)
