@@ -17,10 +17,10 @@ import java.util.List;
 import lombok.Getter;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class TeamsRepository
@@ -73,7 +73,7 @@ public class TeamsRepository
                 .addInterceptor(ApiUtils.getCacheInterceptor(context, 60, 60 * 60 * 24 * 7 * 52))
                 .build();
 
-        nhlApi = new retrofit2.Retrofit.Builder()
+        nhlApi = new Retrofit.Builder()
                 .baseUrl(NhlApi.BASE_URL)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())

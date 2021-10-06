@@ -12,7 +12,6 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -64,6 +63,8 @@ public class TeamSelectorFragment extends Fragment
         favouriteSwitch.setOnCheckedChangeListener(createFavouriteToggleListener());
         viewModel.getCurrentSelectedTeam().observe(this, this::updateFavouriteSwitch);
         viewModel.getFavouriteTeamId().observe(this, this::updateSpinnerOrder);
+
+        viewModel.getCurrentLogo().observe(this, logo::setImageDrawable);
 
         return root;
     }
@@ -122,6 +123,7 @@ public class TeamSelectorFragment extends Fragment
                 final Team selectedTeam = (Team) parent.getItemAtPosition(position);
                 viewModel.updateTeam(selectedTeam);
                 viewModel.getCurrentSelectedTeam().postValue(selectedTeam);
+                viewModel.updateLogo(selectedTeam);
             }
 
             @Override
@@ -174,10 +176,5 @@ public class TeamSelectorFragment extends Fragment
         {
             viewModel.refreshTeams();
         }
-    }
-
-    private void updateLogo(final Team team)
-    {
-        // TODO: implement populating logo with image.
     }
 }

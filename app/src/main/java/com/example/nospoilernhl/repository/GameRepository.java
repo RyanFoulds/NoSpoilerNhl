@@ -24,10 +24,10 @@ import java.util.List;
 import lombok.Getter;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class GameRepository
@@ -75,7 +75,7 @@ public class GameRepository
                 .build();
 
         Gson gson = new GsonBuilder().setDateFormat(DateFormat.DATE_FIELD).create();
-        api = new retrofit2.Retrofit.Builder()
+        api = new Retrofit.Builder()
                 .baseUrl(NhlApi.BASE_URL)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create(gson))
