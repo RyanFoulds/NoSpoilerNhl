@@ -92,6 +92,11 @@ public class LogoRepository
                         Log.e("LogoRepository", "Could not load logo for teamId " + teamId + ".", e);
                     }
                 }
+                else
+                {
+                    currentLogo.postValue(defaultDrawable);
+                    Log.e("LogoRepository", "Could not load logo for teamId " + teamId + ", bad response from api.");
+                }
             }
 
             @Override

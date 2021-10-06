@@ -89,9 +89,10 @@ public class GameRepository
                 new Callback<Schedule>() {
                     @Override
                     public void onResponse(Call<Schedule> call, Response<Schedule> response) {
-                        if (response.body() == null)
+                        if (!response.isSuccessful() || response.body() == null)
                         {
                             game.postValue(null);
+                            Log.e("Game repo", "failed to get schedule for team " + team.getName() + ". Bad response from api.");
                             updateContent("");
                             return;
                         }
@@ -134,6 +135,7 @@ public class GameRepository
                         if (!response.isSuccessful() || response.body() == null)
                         {
                             gameHighlightsUri.postValue("");
+                            Log.e("Game repo", "failed to get game content, bad response from api.");
                             return;
                         }
                         final String newUri = getHighlightFrom(response.body());
