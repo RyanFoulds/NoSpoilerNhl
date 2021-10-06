@@ -1,9 +1,11 @@
 package com.example.nospoilernhl.repository;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.nospoilernhl.api.ApiUtils;
 import com.example.nospoilernhl.api.NhlApi;
 import com.example.nospoilernhl.model.Date;
 import com.example.nospoilernhl.model.Game;
@@ -20,10 +22,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 import lombok.Getter;
+import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class GameRepository
@@ -39,24 +43,39 @@ public class GameRepository
 
     private static GameRepository instance;
 
-    public static GameRepository getInstance()
+    private static final Long cacheSize = (long) (5 * 1024 * 1024);
+
+    public static GameRepository getInstance(final Context context)
     {
         if (instance == null)
         {
-            instance = new GameRepository();
+            instance = new GameRepository(context);
         }
         return instance;
     }
 
     private GameRepository()
     {
+        // Do not instantiate this way.
+        this.api = null;
+        this.gameHighlightsUri = null;
+        this.game = null;
+    }
+
+    private GameRepository(final Context context)
+    {
         gameHighlightsUri = new MutableLiveData<>();
         game = new MutableLiveData<>();
 
-        OkHttpClient client = new OkHttpClient().newBuilder().build();
+        final Cache cache = new Cache(context.getFilesDir(), cacheSize);
+
+        final OkHttpClient client = new OkHttpClient().newBuilder()
+                .cache(cache)
+                .addInterceptor(ApiUtils.getCacheInterceptor(context, 60 * 30, 60 * 60 * 12))
+                .build();
 
         Gson gson = new GsonBuilder().setDateFormat(DateFormat.DATE_FIELD).create();
-        api = new retrofit2.Retrofit.Builder()
+        api = new Retrofit.Builder()
                 .baseUrl(NhlApi.BASE_URL)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -70,8 +89,11 @@ public class GameRepository
                 new Callback<Schedule>() {
                     @Override
                     public void onResponse(Call<Schedule> call, Response<Schedule> response) {
-                        if (response.body() == null)
+                        if (!response.isSuccessful() || response.body() == null)
                         {
+                            game.postValue(null);
+                            Log.e("Game repo", "failed to get schedule for team " + team.getName() + ". Bad response from api.");
+                            updateContent("");
                             return;
                         }
                         final Game newGame = response.body().getDates().stream()
@@ -89,6 +111,8 @@ public class GameRepository
 
                     @Override
                     public void onFailure(Call<Schedule> call, Throwable t) {
+                        game.postValue(null);
+                        updateContent("");
                         Log.e("Game repo", "failed to process schedule", t);
                     }
                 }
@@ -97,14 +121,21 @@ public class GameRepository
 
     private void updateContent(final String gameId)
     {
+        if (gameId == null || gameId.isEmpty())
+        {
+            gameHighlightsUri.postValue("");
+            Log.e("GameRepository", "gameId was null or empty, couldn't update game highlights uri.");
+            return;
+        }
         // Get the content for the provided gameId and update the video uri
         api.getGameContent(gameId).enqueue(
                 new Callback<Content>() {
                     @Override
                     public void onResponse(Call<Content> call, Response<Content> response) {
-                        if (response.code() == 404 || response.body() == null)
+                        if (!response.isSuccessful() || response.body() == null)
                         {
                             gameHighlightsUri.postValue("");
+                            Log.e("Game repo", "failed to get game content, bad response from api.");
                             return;
                         }
                         final String newUri = getHighlightFrom(response.body());
@@ -113,6 +144,7 @@ public class GameRepository
 
                     @Override
                     public void onFailure(Call<Content> call, Throwable t) {
+                        gameHighlightsUri.postValue("");
                         Log.e("Game repo", "failed to process content", t);
                     }
                 }

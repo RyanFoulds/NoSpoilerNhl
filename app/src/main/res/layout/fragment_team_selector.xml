@@ -43,4 +43,19 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@tools:sample/avatars" />
 
+    <ToggleButton
+        android:id="@+id/favourite_switch"
+        android:layout_width="26dp"
+        android:layout_height="0dp"
+        android:background="@drawable/button_favourite"
+        android:switchTextAppearance="@style/TextAppearance.AppCompat.Small"
+        android:text=""
+        android:textAlignment="center"
+        android:textOff=""
+        android:textOn=""
+        app:layout_constraintBottom_toBottomOf="@+id/team_selector"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/team_selector"
+        app:layout_constraintTop_toTopOf="@+id/team_selector" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
