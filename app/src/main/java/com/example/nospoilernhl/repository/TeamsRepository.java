@@ -3,6 +3,7 @@ package com.example.nospoilernhl.repository;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 
@@ -17,10 +18,10 @@ import java.util.List;
 import lombok.Getter;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class TeamsRepository
@@ -73,7 +74,7 @@ public class TeamsRepository
                 .addInterceptor(ApiUtils.getCacheInterceptor(context, 60, 60 * 60 * 24 * 7 * 52))
                 .build();
 
-        nhlApi = new retrofit2.Retrofit.Builder()
+        nhlApi = new Retrofit.Builder()
                 .baseUrl(NhlApi.BASE_URL)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -95,9 +96,14 @@ public class TeamsRepository
         nhlApi.getTeams().enqueue(new Callback<TeamsWrapper>() {
             @Override
             public void onResponse(Call<TeamsWrapper> call, Response<TeamsWrapper> response) {
-                if (response.body() != null)
+                if (response.isSuccessful() && response.body() != null)
                 {
                     teams.postValue(response.body().getTeams());
+                }
+                else
+                {
+                    teams.postValue(Collections.emptyList());
+                    Log.e("TeamsRepository", "Could not get teams, bad response from server.");
                 }
             }
 
@@ -105,6 +111,7 @@ public class TeamsRepository
             public void onFailure(Call<TeamsWrapper> call, Throwable t)
             {
                 teams.postValue(Collections.emptyList());
+                Log.e("TeamsRepository", "Could not get teams, api call failed.");
             }
         });
     }
