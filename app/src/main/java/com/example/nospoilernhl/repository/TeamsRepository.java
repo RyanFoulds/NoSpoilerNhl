@@ -1,6 +1,8 @@
 package com.example.nospoilernhl.repository;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 import androidx.lifecycle.MutableLiveData;
 
@@ -28,9 +30,16 @@ public class TeamsRepository
     @Getter
     private final MutableLiveData<List<Team>> teams;
 
+    @Getter
+    private final MutableLiveData<Integer> favouriteTeamId;
+
+    private final SharedPreferences sharedPreferences;
+
     private static TeamsRepository instance;
 
     private static final Long cacheSize = (long) (5 * 1024 * 1024);
+
+    private static final String FAVOURITE_TEAM_KEY = "favourite_team_id";
 
     public static TeamsRepository getInstance(final Context context)
     {
@@ -46,11 +55,17 @@ public class TeamsRepository
 //        Do not instantiate this way.
         this.nhlApi = null;
         this.teams = null;
+        this.sharedPreferences = null;
+        this.favouriteTeamId = null;
     }
 
     private TeamsRepository(final Context context)
     {
         teams = new MutableLiveData<>();
+        favouriteTeamId = new MutableLiveData<>();
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        favouriteTeamId.postValue(sharedPreferences.getInt(FAVOURITE_TEAM_KEY, 0));
 
         final Cache cache = new Cache(context.getFilesDir(), cacheSize);
         final OkHttpClient client = new OkHttpClient().newBuilder()
@@ -64,6 +79,15 @@ public class TeamsRepository
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
                 .create(NhlApi.class);
+    }
+
+    public void updateFavouriteTeam(final int teamId)
+    {
+        sharedPreferences.edit()
+                         .putInt(FAVOURITE_TEAM_KEY, teamId)
+                         .apply();
+
+        favouriteTeamId.postValue(teamId);
     }
 
     public void searchTeams()

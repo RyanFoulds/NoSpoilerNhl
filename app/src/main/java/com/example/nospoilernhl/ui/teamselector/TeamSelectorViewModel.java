@@ -24,6 +24,9 @@ public class TeamSelectorViewModel extends AndroidViewModel
     @Getter
     private final MutableLiveData<Team> currentSelectedTeam;
 
+    @Getter
+    private final MutableLiveData<Integer> favouriteTeamId;
+
     private final GameRepository gameRepository;
 
     private final TeamsRepository teamsRepository;
@@ -38,7 +41,18 @@ public class TeamSelectorViewModel extends AndroidViewModel
 
         teamsRepository = TeamsRepository.getInstance(application.getApplicationContext());
         teams = teamsRepository.getTeams();
-        refresh();
+        favouriteTeamId = teamsRepository.getFavouriteTeamId();
+        refreshTeams();
+    }
+
+    public void updateFavouriteTeam(final int teamId)
+    {
+        teamsRepository.updateFavouriteTeam(teamId);
+    }
+
+    public void clearFavouriteTeam()
+    {
+        teamsRepository.updateFavouriteTeam(0);
     }
 
     public void updateTeam(final Team team)
@@ -46,7 +60,7 @@ public class TeamSelectorViewModel extends AndroidViewModel
         gameRepository.updateGame(team);
     }
 
-    public void refresh()
+    public void refreshTeams()
     {
         teamsRepository.searchTeams();
     }
