@@ -30,8 +30,6 @@ public class TeamsRepository
 
     private static TeamsRepository instance;
 
-    private Cache cache;
-
     private static final Long cacheSize = (long) (5 * 1024 * 1024);
 
     public static TeamsRepository getInstance(final Context context)
@@ -54,25 +52,10 @@ public class TeamsRepository
     {
         teams = new MutableLiveData<>();
 
-        cache = new Cache(context.getFilesDir(), cacheSize);
-        OkHttpClient client = new OkHttpClient().newBuilder()
+        final Cache cache = new Cache(context.getFilesDir(), cacheSize);
+        final OkHttpClient client = new OkHttpClient().newBuilder()
                 .cache(cache)
-                .addInterceptor(chain -> {
-                    Request request = chain.request();
-                    if (ApiUtils.hasNetwork(context))
-                    {
-                        request.newBuilder()
-                                .header("Cache-Control", "public, max-age=" + 60)
-                                .build();
-                    }
-                    else
-                    {
-                        request.newBuilder()
-                                .header("Cache-Control", "public, only-if-cached, max-stale=" + 60 * 60 * 24 * 7 * 52)
-                                .build();
-                    }
-                    return chain.proceed(request);
-                })
+                .addInterceptor(ApiUtils.getCacheInterceptor(context, 60, 60 * 60 * 24 * 7 * 52))
                 .build();
 
         nhlApi = new retrofit2.Retrofit.Builder()
