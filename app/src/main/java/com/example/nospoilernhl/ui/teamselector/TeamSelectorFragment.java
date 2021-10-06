@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -39,7 +40,7 @@ public class TeamSelectorFragment extends Fragment
 
     private Button watchButton;
 
-    private Switch favouriteSwitch;
+    private ToggleButton favouriteSwitch;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState)
@@ -62,9 +63,7 @@ public class TeamSelectorFragment extends Fragment
         favouriteSwitch = root.findViewById(R.id.favourite_switch);
         favouriteSwitch.setOnCheckedChangeListener(createFavouriteToggleListener());
         viewModel.getCurrentSelectedTeam().observe(this, this::updateFavouriteSwitch);
-        // Refresh the view model teams list when favourite team changes,
-        // this will force the spinner to be re-ordered with the new favourite at the top.
-        viewModel.getFavouriteTeamId().observe(this, id -> viewModel.refreshTeams());
+        viewModel.getFavouriteTeamId().observe(this, this::updateSpinnerOrder);
 
         return root;
     }
@@ -167,6 +166,14 @@ public class TeamSelectorFragment extends Fragment
         favouriteSwitch.setChecked(
                 Objects.equals(viewModel.getFavouriteTeamId().getValue(), Objects.requireNonNull(viewModel.getCurrentSelectedTeam().getValue()).getId())
         );
+    }
+
+    private void updateSpinnerOrder(final int id)
+    {
+        if (id != 0)
+        {
+            viewModel.refreshTeams();
+        }
     }
 
     private void updateLogo(final Team team)
