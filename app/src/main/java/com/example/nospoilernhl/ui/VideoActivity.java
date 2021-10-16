@@ -17,7 +17,7 @@ public class VideoActivity extends Activity implements MediaPlayer.OnCompletionL
     private VideoView videoView;
 
     @Override
-    public void onCreate(Bundle b)
+    public void onCreate(final Bundle b)
     {
         super.onCreate(b);
         setContentView(R.layout.activity_video_player);

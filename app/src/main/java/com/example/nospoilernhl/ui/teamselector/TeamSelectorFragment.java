@@ -1,9 +1,12 @@
 package com.example.nospoilernhl.ui.teamselector;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -17,11 +20,16 @@ import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.nospoilernhl.R;
 import com.example.nospoilernhl.model.Team;
 import com.example.nospoilernhl.ui.VideoActivity;
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaLoadRequestData;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.framework.CastSession;
+import com.google.android.gms.cast.framework.media.RemoteMediaClient;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -35,8 +43,6 @@ public class TeamSelectorFragment extends Fragment
 
     private Spinner teamSpinner;
 
-    private ImageView logo;
-
     private Button watchButton;
 
     private ToggleButton favouriteSwitch;
@@ -44,10 +50,10 @@ public class TeamSelectorFragment extends Fragment
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState)
     {
-        viewModel = ViewModelProviders.of(this).get(TeamSelectorViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(TeamSelectorViewModel.class);
         View root = inflater.inflate(R.layout.fragment_team_selector, container, false);
 
-        logo = root.findViewById(R.id.logoView);
+        final ImageView logo = root.findViewById(R.id.logoView);
 
         teamSpinner = root.findViewById(R.id.team_selector);
         observeViewModel();
@@ -55,24 +61,26 @@ public class TeamSelectorFragment extends Fragment
 
         watchButton = root.findViewById(R.id.watch_button);
         watchButton.setOnClickListener(this::playVideoFullScreen);
-        viewModel.getCurrentGameUri().observe(this, this::updateButton);
+        viewModel.getCurrentGameUri().observe(getViewLifecycleOwner(), this::updateButton);
 
         registerSpinnerOnClickListener();
 
         favouriteSwitch = root.findViewById(R.id.favourite_switch);
         favouriteSwitch.setOnCheckedChangeListener(createFavouriteToggleListener());
-        viewModel.getCurrentSelectedTeam().observe(this, this::updateFavouriteSwitch);
-        viewModel.getFavouriteTeamId().observe(this, this::updateSpinnerOrder);
+        viewModel.getCurrentSelectedTeam().observe(getViewLifecycleOwner(), this::updateFavouriteSwitch);
+        viewModel.getFavouriteTeamId().observe(getViewLifecycleOwner(), this::updateSpinnerOrder);
 
-        viewModel.getCurrentLogo().observe(this, logo::setImageDrawable);
+        viewModel.getCurrentLogo().observe(getViewLifecycleOwner(), logo::setImageDrawable);
+
+        viewModel.getCurrentCastSession().observe(getViewLifecycleOwner(), this::handleCastSessionChange);
 
         return root;
     }
 
     private void observeViewModel()
     {
-        viewModel.getTeams().observe(this, (teams) -> {
-            final ArrayAdapter<Team> adapter = new ArrayAdapter<>(Objects.requireNonNull(this.getContext()),
+        viewModel.getTeams().observe(getViewLifecycleOwner(), (teams) -> {
+            final ArrayAdapter<Team> adapter = new ArrayAdapter<>(this.requireContext(),
                     android.R.layout.simple_spinner_item, teams.stream()
                                                                .sorted(getTeamsComparator())
                                                                .collect(Collectors.toList()));
@@ -148,6 +156,40 @@ public class TeamSelectorFragment extends Fragment
         startActivity(videoActivity);
     }
 
+    private void playVideoCast(final View view)
+    {
+        final String videoPath = viewModel.getCurrentGameUri().getValue();
+        if (StringUtils.isBlank(videoPath))
+        {
+            showToast();
+            Log.w("TeamSelectorFragment", "Could not find game highlights for selected team");
+            return;
+        }
+
+        final MediaMetadata movieMetaData = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
+        movieMetaData.putString(MediaMetadata.KEY_TITLE,
+                Objects.requireNonNull(viewModel.getCurrentSelectedTeam().getValue()).getName()
+                        + " last game highlights.");
+
+        final MediaInfo mediaInfo = new MediaInfo.Builder(videoPath)
+                .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                .setContentType("videos/mp4")
+                .setMetadata(movieMetaData)
+                .build();
+
+        final RemoteMediaClient remoteMediaClient = Objects.requireNonNull(viewModel.getCurrentCastSession().getValue()).getRemoteMediaClient();
+
+        if (remoteMediaClient == null)
+        {
+            playVideoFullScreen(view);
+        }
+        else
+        {
+            remoteMediaClient.load(new MediaLoadRequestData.Builder().setMediaInfo(mediaInfo).build());
+            // Show the controller here too!
+        }
+    }
+
     private void showToast()
     {
         final Team currentTeam = viewModel.getCurrentSelectedTeam().getValue();
@@ -175,6 +217,18 @@ public class TeamSelectorFragment extends Fragment
         if (id != 0)
         {
             viewModel.refreshTeams();
+        }
+    }
+
+    private void handleCastSessionChange(final CastSession newSession)
+    {
+        if (newSession == null)
+        {
+            watchButton.setOnClickListener(this::playVideoFullScreen);
+        }
+        else
+        {
+            watchButton.setOnClickListener(this::playVideoCast);
         }
     }
 }
