@@ -5,6 +5,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PictureDrawable;
 import android.util.Log;
 
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.lifecycle.MutableLiveData;
 
 import com.caverock.androidsvg.SVG;
@@ -70,7 +71,7 @@ public class LogoRepository
                 .create(LogoApi.class);
 
         currentLogo = new MutableLiveData<>();
-        defaultDrawable = context.getDrawable(R.drawable.empty);
+        defaultDrawable = AppCompatResources.getDrawable(context, R.drawable.empty);
         currentLogo.postValue(defaultDrawable);
     }
 
@@ -100,7 +101,7 @@ public class LogoRepository
             }
 
             @Override
-            public void onFailure(Call call, Throwable t)
+            public void onFailure(final Call call, final Throwable t)
             {
                 currentLogo.postValue(defaultDrawable);
             }

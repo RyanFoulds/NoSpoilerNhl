@@ -6,6 +6,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="castExpandedControllerStyle">@style/CustomCastExpandedController</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -16,5 +17,9 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="CustomCastExpandedController" parent="CastExpandedController">
+        <item name="castControlButtons">@array/cast_expanded_controller_control_buttons</item>
+    </style>
 
 </resources>

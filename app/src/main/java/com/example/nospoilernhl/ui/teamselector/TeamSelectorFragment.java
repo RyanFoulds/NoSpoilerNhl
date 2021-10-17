@@ -5,8 +5,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -30,6 +28,7 @@ import com.google.android.gms.cast.MediaLoadRequestData;
 import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.media.RemoteMediaClient;
+import com.google.android.gms.common.images.WebImage;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -151,9 +150,20 @@ public class TeamSelectorFragment extends Fragment
             return;
         }
 
+        final Intent videoIntent = new Intent(Intent.ACTION_VIEW);
+        videoIntent.setDataAndType(Uri.parse(videoPath), "video/mp4");
         final Intent videoActivity = new Intent(getActivity(), VideoActivity.class);
         videoActivity.putExtra("videoPath", videoPath);
-        startActivity(videoActivity);
+
+        try
+        {
+            startActivity(videoIntent);
+        }
+        catch (Exception e)
+        {
+            Log.w("teamSelector", "Could not find a video player on the system, using built-in.");
+            startActivity(videoActivity);
+        }
     }
 
     private void playVideoCast(final View view)
@@ -168,8 +178,9 @@ public class TeamSelectorFragment extends Fragment
 
         final MediaMetadata movieMetaData = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
         movieMetaData.putString(MediaMetadata.KEY_TITLE,
-                Objects.requireNonNull(viewModel.getCurrentSelectedTeam().getValue()).getName()
-                        + " last game highlights.");
+                Objects.requireNonNull(viewModel.getCurrentSelectedTeam().getValue()).getTeamName()
+                        + " - latest game");
+        movieMetaData.addImage(new WebImage(Uri.parse(viewModel.getCurrentGameThumbnailUri().getValue())));
 
         final MediaInfo mediaInfo = new MediaInfo.Builder(videoPath)
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
@@ -186,7 +197,6 @@ public class TeamSelectorFragment extends Fragment
         else
         {
             remoteMediaClient.load(new MediaLoadRequestData.Builder().setMediaInfo(mediaInfo).build());
-            // Show the controller here too!
         }
     }
 

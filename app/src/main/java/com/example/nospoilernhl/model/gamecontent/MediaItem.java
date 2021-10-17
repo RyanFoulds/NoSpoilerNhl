@@ -18,9 +18,10 @@ public class MediaItem
 {
     private String type;
     private List<Playback> playbacks;
+    private Image image;
 
     public static MediaItem dummy()
     {
-        return new MediaItem("DUMMY", Collections.emptyList());
+        return new MediaItem("DUMMY", Collections.emptyList(), Image.dummy());
     }
 }

@@ -34,6 +34,9 @@ public class TeamSelectorViewModel extends AndroidViewModel
     private final MutableLiveData<Drawable> currentLogo;
 
     @Getter
+    private final MutableLiveData<String> currentGameThumbnailUri;
+
+    @Getter
     private final MutableLiveData<CastSession> currentCastSession;
 
     private final GameRepository gameRepository;
@@ -58,6 +61,7 @@ public class TeamSelectorViewModel extends AndroidViewModel
 
         logoRepository = LogoRepository.getInstance(application.getApplicationContext());
         currentLogo = logoRepository.getCurrentLogo();
+        currentGameThumbnailUri = gameRepository.getThumbnailUri();
     }
 
     public void updateFavouriteTeam(final int teamId)
