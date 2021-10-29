@@ -1,82 +1,102 @@
 package com.example.nospoilernhl.ui;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
-import android.widget.MediaController;
-import android.widget.VideoView;
+import android.view.Menu;
+import android.view.Window;
+import android.view.WindowManager;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.nospoilernhl.R;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.util.MimeTypes;
+import com.google.android.gms.cast.framework.CastButtonFactory;
+import com.google.android.gms.cast.framework.CastContext;
 
-import org.apache.commons.lang3.StringUtils;
-
-public class VideoActivity extends Activity implements MediaPlayer.OnCompletionListener
+public class VideoActivity extends AppCompatActivity implements Player.Listener
 {
-    private VideoView videoView;
+    private PlayerView playerView;
+    private long playbackPosition;
+    private boolean stopped;
+    private String videoUri;
+
+    private CastContext castContext;
 
     @Override
     public void onCreate(final Bundle b)
     {
         super.onCreate(b);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                             WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_video_player);
-        String videoPath = null;
+
+        castContext = CastContext.getSharedInstance(getApplicationContext());
+
         Bundle e = getIntent().getExtras();
         if (e != null)
         {
-            videoPath = e.getString("videoPath");
+            videoUri = e.getString("videoPath");
         }
-        videoView = findViewById(R.id.myvideoview);
-        videoView.setOnCompletionListener(this);
-        videoView.setOnPreparedListener(mp -> mp.setLooping(false));
+        playerView = findViewById(R.id.exoplayerView);
 
-        final MediaController mediaController = new MediaController(this);
-        mediaController.setAnchorView(videoView);
-        videoView.setMediaController(mediaController);
-
-        if (!playFileRes(videoPath)) return;
-        videoView.start();
+        CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), findViewById(R.id.player_cast_button));
     }
 
-    private boolean playFileRes(final String videoPath)
+    private void initializePlayer()
     {
-        if (StringUtils.isBlank(videoPath))
-        {
-            stopPlaying();
-            return false;
-        }
-        else
-        {
-            videoView.setVideoURI(Uri.parse(videoPath));
-            return true;
-        }
-    }
+        final ExoPlayer player = new SimpleExoPlayer.Builder(this).build();
 
-    private void stopPlaying()
-    {
-        videoView.stopPlayback();
-        this.finish();
+        player.setMediaItem(new MediaItem.Builder()
+                                            .setUri(videoUri)
+                                            .setMimeType(MimeTypes.BASE_TYPE_VIDEO)
+                                            .build());
+        playerView.setPlayer(player);
+        player.seekTo(playbackPosition);
+        player.setPlayWhenReady(!stopped);
+        player.addListener(this);
+
+        player.prepare();
     }
 
     @Override
-    public void onCompletion(final MediaPlayer mediaPlayer)
+    public void onStart()
     {
-        finish();
+        super.onStart();
+        initializePlayer();
     }
 
     @Override
-    protected void onNewIntent(final Intent intent)
+    public void onStop()
     {
-        super.onNewIntent(intent);
-        setIntent(intent);
-        String videoPath = null;
-        final Bundle e = getIntent().getExtras();
-        if (e != null)
+        super.onStop();
+        final Player exoPlayer = playerView.getPlayer();
+        if (exoPlayer == null)
         {
-            videoPath = e.getString("videoPath");
+            return;
         }
 
-        playFileRes(videoPath);
+        stopped = true;
+        playbackPosition = exoPlayer.getCurrentPosition();
+        exoPlayer.release();
+    }
+
+    @Override
+    public void onIsPlayingChanged(final boolean isPlaying)
+    {
+        playerView.setKeepScreenOn(isPlaying);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), menu, R.id.media_route_menu_item);
+        return true;
     }
 }

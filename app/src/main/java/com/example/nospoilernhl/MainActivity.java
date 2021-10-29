@@ -33,8 +33,6 @@ public class MainActivity extends AppCompatActivity {
     private SessionManager sessionManager;
     private final SessionManagerListener<CastSession> sessionManagerListener = new MySessionManagerListener();
 
-    private MenuItem routeMediaMenuItem;
-
     private MutableLiveData<CastSession> castSessionReference;
 
     @Override
@@ -65,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(final Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-        routeMediaMenuItem = CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), menu, R.id.media_route_menu_item);
+        CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), menu, R.id.media_route_menu_item);
         return true;
     }
 

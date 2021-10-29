@@ -150,20 +150,9 @@ public class TeamSelectorFragment extends Fragment
             return;
         }
 
-        final Intent videoIntent = new Intent(Intent.ACTION_VIEW);
-        videoIntent.setDataAndType(Uri.parse(videoPath), "video/mp4");
         final Intent videoActivity = new Intent(getActivity(), VideoActivity.class);
         videoActivity.putExtra("videoPath", videoPath);
-
-        try
-        {
-            startActivity(videoIntent);
-        }
-        catch (Exception e)
-        {
-            Log.w("teamSelector", "Could not find a video player on the system, using built-in.");
-            startActivity(videoActivity);
-        }
+        startActivity(videoActivity);
     }
 
     private void playVideoCast(final View view)
