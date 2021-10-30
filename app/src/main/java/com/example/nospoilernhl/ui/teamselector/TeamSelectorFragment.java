@@ -152,6 +152,8 @@ public class TeamSelectorFragment extends Fragment
 
         final Intent videoActivity = new Intent(getActivity(), VideoActivity.class);
         videoActivity.putExtra("videoPath", videoPath);
+        videoActivity.putExtra("imagePath", viewModel.getCurrentGameThumbnailUri().getValue());
+        videoActivity.putExtra("activeTeam", Objects.requireNonNull(viewModel.getCurrentSelectedTeam().getValue()).getTeamName());
         startActivity(videoActivity);
     }
 
