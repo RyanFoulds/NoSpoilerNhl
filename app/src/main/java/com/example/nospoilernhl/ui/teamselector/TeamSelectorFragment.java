@@ -38,6 +38,9 @@ import java.util.stream.Collectors;
 
 public class TeamSelectorFragment extends Fragment
 {
+    private static final String NO_GAME_STRING = "No recent game found for %s";
+    private static final String SAME_GAME_STRING = "Already playing most recent game for %s";
+
     private TeamSelectorViewModel viewModel;
 
     private Spinner teamSpinner;
@@ -59,7 +62,9 @@ public class TeamSelectorFragment extends Fragment
         viewModel.refreshTeams();
 
         watchButton = root.findViewById(R.id.watch_button);
-        watchButton.setOnClickListener(this::playVideoFullScreen);
+        watchButton.setOnClickListener(viewModel.getCurrentCastSession().getValue() == null
+                ? this::playVideoFullScreen
+                : this::playVideoCast);
         viewModel.getCurrentGameUri().observe(getViewLifecycleOwner(), this::updateButton);
 
         registerSpinnerOnClickListener();
@@ -145,7 +150,7 @@ public class TeamSelectorFragment extends Fragment
         final String videoPath = viewModel.getCurrentGameUri().getValue();
         if (StringUtils.isBlank(videoPath))
         {
-            showToast();
+            showToast(NO_GAME_STRING);
             Log.w("TeamSelectorFragment", "Could not find game highlights for selected team");
             return;
         }
@@ -162,7 +167,7 @@ public class TeamSelectorFragment extends Fragment
         final String videoPath = viewModel.getCurrentGameUri().getValue();
         if (StringUtils.isBlank(videoPath))
         {
-            showToast();
+            showToast(NO_GAME_STRING);
             Log.w("TeamSelectorFragment", "Could not find game highlights for selected team");
             return;
         }
@@ -181,6 +186,15 @@ public class TeamSelectorFragment extends Fragment
 
         final RemoteMediaClient remoteMediaClient = Objects.requireNonNull(viewModel.getCurrentCastSession().getValue()).getRemoteMediaClient();
 
+        // If we're already casting the same video then don't bother doing anything here.
+        if (remoteMediaClient != null
+            && remoteMediaClient.getMediaInfo() != null
+            && videoPath.equals(remoteMediaClient.getMediaInfo().getContentId()))
+        {
+            showToast(SAME_GAME_STRING);
+            return;
+        }
+
         if (remoteMediaClient == null)
         {
             playVideoFullScreen(view);
@@ -191,11 +205,11 @@ public class TeamSelectorFragment extends Fragment
         }
     }
 
-    private void showToast()
+    private void showToast(final String message)
     {
         final Team currentTeam = viewModel.getCurrentSelectedTeam().getValue();
         final Toast toast = Toast.makeText(getContext(),
-                String.format("No recent game found for %s",
+                String.format(message,
                         currentTeam == null ? "" : currentTeam.getTeamName()),
                 Toast.LENGTH_LONG);
         toast.show();

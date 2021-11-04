@@ -13,7 +13,6 @@ import com.example.nospoilernhl.R;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ext.cast.CastPlayer;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.util.MimeTypes;
@@ -95,7 +94,7 @@ public class VideoActivity extends AppCompatActivity implements Player.Listener
 
     private void initializeLocalPlayer()
     {
-        final ExoPlayer player = new SimpleExoPlayer.Builder(this).build();
+        final ExoPlayer player = new ExoPlayer.Builder(this).build();
 
         player.setMediaItem(new MediaItem.Builder()
                                             .setUri(videoUri)
@@ -137,7 +136,10 @@ public class VideoActivity extends AppCompatActivity implements Player.Listener
     public void onStart()
     {
         super.onStart();
-        initializeLocalPlayer();
+        if (!casting)
+        {
+            initializeLocalPlayer();
+        }
     }
 
     @Override
