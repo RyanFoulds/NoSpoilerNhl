@@ -16,6 +16,17 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBaseline_toTopOf="@layout/cast_mini_controller"
         app:navGraph="@navigation/mobile_navigation" />
+
+    <fragment
+        android:id="@+id/castMiniController"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        class="com.google.android.gms.cast.framework.media.widget.MiniControllerFragment" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

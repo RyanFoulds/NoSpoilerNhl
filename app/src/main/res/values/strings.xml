@@ -13,4 +13,5 @@
     <string name="watch_button_label">Watch!</string>
 
     <string name="team_logo_image_description">Team Logo</string>
+    <string name="cast_button_title">Cast</string>
 </resources>
