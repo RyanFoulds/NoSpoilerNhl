@@ -10,6 +10,7 @@ import com.example.nospoilernhl.model.Team;
 import com.example.nospoilernhl.repository.GameRepository;
 import com.example.nospoilernhl.repository.LogoRepository;
 import com.example.nospoilernhl.repository.TeamsRepository;
+import com.google.android.gms.cast.framework.CastSession;
 
 import java.util.List;
 
@@ -32,6 +33,12 @@ public class TeamSelectorViewModel extends AndroidViewModel
     @Getter
     private final MutableLiveData<Drawable> currentLogo;
 
+    @Getter
+    private final MutableLiveData<String> currentGameThumbnailUri;
+
+    @Getter
+    private final MutableLiveData<CastSession> currentCastSession;
+
     private final GameRepository gameRepository;
 
     private final TeamsRepository teamsRepository;
@@ -42,6 +49,7 @@ public class TeamSelectorViewModel extends AndroidViewModel
     {
         super(application);
         currentSelectedTeam = new MutableLiveData<>();
+        currentCastSession = new MutableLiveData<>();
 
         gameRepository = GameRepository.getInstance(application.getApplicationContext());
         currentGameUri = gameRepository.getGameHighlightsUri();
@@ -53,6 +61,7 @@ public class TeamSelectorViewModel extends AndroidViewModel
 
         logoRepository = LogoRepository.getInstance(application.getApplicationContext());
         currentLogo = logoRepository.getCurrentLogo();
+        currentGameThumbnailUri = gameRepository.getThumbnailUri();
     }
 
     public void updateFavouriteTeam(final int teamId)

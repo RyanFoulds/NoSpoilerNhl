@@ -12,6 +12,7 @@ import com.example.nospoilernhl.model.Game;
 import com.example.nospoilernhl.model.Schedule;
 import com.example.nospoilernhl.model.Team;
 import com.example.nospoilernhl.model.gamecontent.Content;
+import com.example.nospoilernhl.model.gamecontent.Cut;
 import com.example.nospoilernhl.model.gamecontent.MediaItem;
 import com.example.nospoilernhl.model.gamecontent.Playback;
 import com.google.gson.Gson;
@@ -20,6 +21,7 @@ import com.google.gson.GsonBuilder;
 import java.text.DateFormat;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import okhttp3.Cache;
@@ -38,6 +40,8 @@ public class GameRepository
     private final MutableLiveData<String> gameHighlightsUri;
     @Getter
     private final MutableLiveData<Game> game;
+    @Getter
+    private final MutableLiveData<String> thumbnailUri;
 
     private static final String HIGHLIGHT_TITLE = "Extended Highlights";
 
@@ -60,12 +64,14 @@ public class GameRepository
         this.api = null;
         this.gameHighlightsUri = null;
         this.game = null;
+        this.thumbnailUri = null;
     }
 
     private GameRepository(final Context context)
     {
         gameHighlightsUri = new MutableLiveData<>();
         game = new MutableLiveData<>();
+        thumbnailUri = new MutableLiveData<>();
 
         final Cache cache = new Cache(context.getFilesDir(), cacheSize);
 
@@ -135,33 +141,52 @@ public class GameRepository
                         if (!response.isSuccessful() || response.body() == null)
                         {
                             gameHighlightsUri.postValue("");
+                            thumbnailUri.postValue("");
                             Log.e("Game repo", "failed to get game content, bad response from api.");
                             return;
                         }
-                        final String newUri = getHighlightFrom(response.body());
-                        gameHighlightsUri.postValue(newUri);
+                        final List<MediaItem> mediaItems = getHighlightMediaItemFrom(response.body());
+                        gameHighlightsUri.postValue(getHighlightFrom(mediaItems));
+                        thumbnailUri.postValue(getThumbnailFrom(mediaItems));
                     }
 
                     @Override
                     public void onFailure(Call<Content> call, Throwable t) {
                         gameHighlightsUri.postValue("");
+                        thumbnailUri.postValue("");
                         Log.e("Game repo", "failed to process content", t);
                     }
                 }
         );
     }
 
-    private String getHighlightFrom(final Content content)
+    private List<MediaItem> getHighlightMediaItemFrom(final Content content)
     {
         return content.getMedia().getEpg().stream()
                 .filter(epg -> epg.getTitle().equalsIgnoreCase(HIGHLIGHT_TITLE))
                 .map(epg -> epg.getItems().stream().findFirst().orElse(MediaItem.dummy()))
-                .flatMap(mediaItem -> mediaItem.getPlaybacks().stream())
-                .filter(playback -> playback.getName().contains("FLASH"))
-                .sorted((p1, p2) -> Integer.compare(p2.getBitRate(), p1.getBitRate()))
-                .peek(item -> Log.d("game repo", item.getName()))
-                .map(Playback::getUrl)
-                .findFirst()
-                .orElse("");
+                .collect(Collectors.toList());
+    }
+
+    private String getThumbnailFrom(final List<MediaItem> mediaItems)
+    {
+        return mediaItems.stream()
+                         .flatMap(mediaItem -> mediaItem.getImage().getCuts().values().stream())
+                         .sorted((cut1, cut2) -> Integer.compare(cut2.getWidth(), cut1.getWidth()))
+                         .map(Cut::getSrc)
+                         .findFirst()
+                         .orElse("");
+    }
+
+    private String getHighlightFrom(final List<MediaItem> mediaItems)
+    {
+        return mediaItems.stream()
+                         .flatMap(mediaItem -> mediaItem.getPlaybacks().stream())
+                         .filter(playback -> playback.getName().contains("FLASH"))
+                         .sorted((p1, p2) -> Integer.compare(p2.getBitRate(), p1.getBitRate()))
+                         .peek(item -> Log.d("game repo", item.getName()))
+                         .map(Playback::getUrl)
+                         .findFirst()
+                         .orElse("");
     }
 }
