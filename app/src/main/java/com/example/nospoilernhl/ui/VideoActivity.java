@@ -1,5 +1,6 @@
 package com.example.nospoilernhl.ui;
 
+import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
@@ -14,7 +15,7 @@ import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.ext.cast.CastPlayer;
-import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.ui.StyledPlayerView;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaLoadRequestData;
@@ -26,12 +27,14 @@ import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.google.android.gms.cast.framework.media.RemoteMediaClient;
 import com.google.android.gms.common.images.WebImage;
 
+import java.util.Objects;
+
 import lombok.AccessLevel;
 import lombok.Setter;
 
 public class VideoActivity extends AppCompatActivity implements Player.Listener
 {
-    private PlayerView playerView;
+    private StyledPlayerView playerView;
     @Setter(AccessLevel.PRIVATE)
     private long playbackPosition;
     private boolean stopped;
@@ -41,8 +44,7 @@ public class VideoActivity extends AppCompatActivity implements Player.Listener
     private boolean casting;
     private SessionManagerListener<CastSession> sessionManagerListener;
 
-    private CastContext castContext;
-
+    @SuppressLint("MissingInflatedId")
     @Override
     public void onCreate(final Bundle b)
     {
@@ -53,9 +55,11 @@ public class VideoActivity extends AppCompatActivity implements Player.Listener
 
         setContentView(R.layout.activity_video_player);
 
-        castContext = CastContext.getSharedInstance(getApplicationContext());
         sessionManagerListener = new InPlayerSessionManagerListener();
-        castContext.getSessionManager().addSessionManagerListener(sessionManagerListener, CastSession.class);
+        CastContext.getSharedInstance(getApplicationContext(), Runnable::run)
+                .addOnSuccessListener(
+                        result -> result.getSessionManager()
+                                .addSessionManagerListener(sessionManagerListener, CastSession.class));
 
         Bundle e = getIntent().getExtras();
         if (e != null)
@@ -77,7 +81,7 @@ public class VideoActivity extends AppCompatActivity implements Player.Listener
                 .setDescription(activeTeam + " - latest game")
                 .build();
 
-        final CastPlayer player = new CastPlayer(castContext);
+        final CastPlayer player = new CastPlayer(Objects.requireNonNull(CastContext.getSharedInstance()));
         player.setMediaItem(new MediaItem.Builder()
                                          .setMediaMetadata(movieMetaData)
                                          .setUri(videoUri)

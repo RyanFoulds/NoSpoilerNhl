@@ -33,8 +33,7 @@
         android:paddingEnd="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:targetApi="28">
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -52,15 +51,8 @@
                 app:tint="@color/white" />
 
             <ImageButton
-                android:id="@id/exo_play"
-                style="@style/ExoMediaButton.Play"
-                android:scaleType="fitCenter"
-                android:tintMode="src_in"
-                app:tint="@color/white" />
-
-            <ImageButton
-                android:id="@id/exo_pause"
-                style="@style/ExoMediaButton.Pause"
+                android:id="@id/exo_play_pause"
+                style="@style/ExoStyledControls.Button.Center.PlayPause"
                 android:scaleType="fitCenter"
                 android:tintMode="src_in"
                 app:tint="@color/white" />
