@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -21,7 +22,10 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.nospoilernhl.R;
+import com.example.nospoilernhl.model.Game;
 import com.example.nospoilernhl.model.Team;
+import com.example.nospoilernhl.model.TeamWrapper;
+import com.example.nospoilernhl.model.Teams;
 import com.example.nospoilernhl.ui.VideoActivity;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaLoadRequestData;
@@ -32,6 +36,14 @@ import com.google.android.gms.common.images.WebImage;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.nio.BufferUnderflowException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.FormatStyle;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -40,6 +52,8 @@ public class TeamSelectorFragment extends Fragment
 {
     private static final String NO_GAME_STRING = "No recent game found for %s";
     private static final String SAME_GAME_STRING = "Already playing most recent game for %s";
+    private static final String GAME_STRING = "%s %s";
+    private static final String SELECTION_KEY = "spinner_selection";
 
     private TeamSelectorViewModel viewModel;
 
@@ -48,6 +62,8 @@ public class TeamSelectorFragment extends Fragment
     private Button watchButton;
 
     private ToggleButton favouriteSwitch;
+
+    private TextView nextGameDate;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState)
@@ -58,7 +74,7 @@ public class TeamSelectorFragment extends Fragment
         final ImageView logo = root.findViewById(R.id.logoView);
 
         teamSpinner = root.findViewById(R.id.team_selector);
-        observeViewModel();
+        observeViewModel(savedInstanceState == null ? 0 : savedInstanceState.getInt(SELECTION_KEY));
         viewModel.refreshTeams();
 
         watchButton = root.findViewById(R.id.watch_button);
@@ -78,10 +94,15 @@ public class TeamSelectorFragment extends Fragment
 
         viewModel.getCurrentCastSession().observe(getViewLifecycleOwner(), this::handleCastSessionChange);
 
+        nextGameDate = root.findViewById(R.id.next_game_date);
+
+        viewModel.getCurrentGame().observe(getViewLifecycleOwner(), this::handleCurrentGameChange);
+        viewModel.getNextGame().observe(getViewLifecycleOwner(), this::handleNextGameChange);
+
         return root;
     }
 
-    private void observeViewModel()
+    private void observeViewModel(final int savedPosition)
     {
         viewModel.getTeams().observe(getViewLifecycleOwner(), (teams) -> {
             final ArrayAdapter<Team> adapter = new ArrayAdapter<>(this.requireContext(),
@@ -90,6 +111,7 @@ public class TeamSelectorFragment extends Fragment
                                                                .collect(Collectors.toList()));
             adapter.setDropDownViewResource(R.layout.spinner_item);
             teamSpinner.setAdapter(adapter);
+            teamSpinner.setSelection(savedPosition, false);
                 });
     }
 
@@ -134,8 +156,6 @@ public class TeamSelectorFragment extends Fragment
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 final Team selectedTeam = (Team) parent.getItemAtPosition(position);
                 viewModel.updateTeam(selectedTeam);
-                viewModel.getCurrentSelectedTeam().postValue(selectedTeam);
-                viewModel.updateLogo(selectedTeam);
             }
 
             @Override
@@ -218,6 +238,8 @@ public class TeamSelectorFragment extends Fragment
     private void updateButton(final String gameUri)
     {
         watchButton.setEnabled(gameUri != null && !gameUri.isEmpty());
+            handleGameChange(Objects.requireNonNull(viewModel.getCurrentGame().getValue()),
+                             watchButton);
     }
 
     private void updateFavouriteSwitch(final Team team)
@@ -245,5 +267,88 @@ public class TeamSelectorFragment extends Fragment
         {
             watchButton.setOnClickListener(this::playVideoCast);
         }
+    }
+
+    private void handleGameChange(final Game newGame, final TextView toChange)
+    {
+        OffsetDateTime dateTime = null;
+        final Teams teams = newGame.getTeams();
+        try {
+            dateTime = OffsetDateTime.parse(newGame.getGameDate());
+        }
+        catch (NullPointerException npe) {
+            Log.w("TeamSelectorFragment", "No game date found", npe);
+        }
+        catch (DateTimeParseException dtpe) {
+            Log.e("TeamSelectorFragment", "Couldn't parse game date", dtpe);
+        }
+        if (dateTime == null || teams == null || teams.getAway() == null || teams.getHome() == null)
+        {
+            toChange.setText(String.format(NO_GAME_STRING,
+                    viewModel.getCurrentSelectedTeam().getValue() == null
+                            ? ""
+                            : viewModel.getCurrentSelectedTeam().getValue().getTeamName()));
+            return;
+        }
+
+        toChange.setText(String.format(GAME_STRING,
+                getFormattedDateTimeString(dateTime),
+                getOpponentString(teams)));
+    }
+
+    private String getOpponentString(final Teams teams)
+    {
+        final int selectedId = viewModel.getCurrentSelectedTeam().getValue().getId();
+        if (teams.getHome().getTeam().getId() == selectedId)
+        {
+            return "@ " + getTeamAbbreviation(teams.getAway());
+        }
+        else
+        {
+            return "vs " + getTeamAbbreviation(teams.getHome());
+        }
+    }
+
+    private void handleNextGameChange(final Game newGame)
+    {
+        handleGameChange(newGame, nextGameDate);
+    }
+
+    private void handleCurrentGameChange(final Game newGame)
+    {
+        handleGameChange(newGame, watchButton);
+    }
+
+    private String getTeamAbbreviation(final TeamWrapper teamWrapper)
+    {
+        return getTeamAbbreviation(teamWrapper.getTeam().getId());
+    }
+
+    private String getTeamAbbreviation(final int id)
+    {
+        return viewModel.getTeams().getValue().stream()
+                .filter(team -> team.getId() == id)
+                .map(Team::getAbbreviation)
+                .findFirst()
+                .orElse("");
+    }
+
+    private String getFormattedDateTimeString(final OffsetDateTime offsetDateTime)
+    {
+        final Instant instant = offsetDateTime.toInstant();
+        final OffsetDateTime locallyOffset = offsetDateTime.withOffsetSameInstant(
+                ZoneId.systemDefault().getRules().getOffset(instant)
+        );
+
+        return locallyOffset.format(
+                DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)
+        );
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull final Bundle bundle)
+    {
+        super.onSaveInstanceState(bundle);
+        bundle.putInt(SELECTION_KEY, teamSpinner.getSelectedItemPosition());
     }
 }

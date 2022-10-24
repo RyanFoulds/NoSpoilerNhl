@@ -28,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
 
-    private CastContext castContext;
     private CastSession castSession;
     private SessionManager sessionManager;
     private final SessionManagerListener<CastSession> sessionManagerListener = new MySessionManagerListener();
@@ -52,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-        castContext = CastContext.getSharedInstance(this);
+        final CastContext castContext = CastContext.getSharedInstance(this);
         sessionManager = castContext.getSessionManager();
 
         castSessionReference = new ViewModelProvider(this).get(TeamSelectorViewModel.class)
