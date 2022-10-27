@@ -1,16 +1,13 @@
 package com.example.nospoilernhl.model;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 @Data
-@Builder
-public class Teams
+@AllArgsConstructor
+public class TeamWrapper
 {
-    private TeamWrapper away;
-    private TeamWrapper home;
+    private Team team;
 }

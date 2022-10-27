@@ -14,4 +14,6 @@
 
     <string name="team_logo_image_description">Team Logo</string>
     <string name="cast_button_title">Cast</string>
+    <string name="next_up_text">Next up:</string>
+    <string name="watch_label_text_view">Watch most recent highlights</string>
 </resources>

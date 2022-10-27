@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.nospoilernhl.model.Game;
 import com.example.nospoilernhl.model.Team;
 import com.example.nospoilernhl.repository.GameRepository;
 import com.example.nospoilernhl.repository.LogoRepository;
@@ -37,6 +38,12 @@ public class TeamSelectorViewModel extends AndroidViewModel
     private final MutableLiveData<String> currentGameThumbnailUri;
 
     @Getter
+    private final MutableLiveData<Game> nextGame;
+
+    @Getter
+    private final MutableLiveData<Game> currentGame;
+
+    @Getter
     private final MutableLiveData<CastSession> currentCastSession;
 
     private final GameRepository gameRepository;
@@ -52,7 +59,9 @@ public class TeamSelectorViewModel extends AndroidViewModel
         currentCastSession = new MutableLiveData<>();
 
         gameRepository = GameRepository.getInstance(application.getApplicationContext());
+        currentGame = gameRepository.getGame();
         currentGameUri = gameRepository.getGameHighlightsUri();
+        nextGame = gameRepository.getNextGame();
 
         teamsRepository = TeamsRepository.getInstance(application.getApplicationContext());
         teams = teamsRepository.getTeams();
@@ -76,16 +85,14 @@ public class TeamSelectorViewModel extends AndroidViewModel
 
     public void updateTeam(final Team team)
     {
+        currentSelectedTeam.postValue(team);
         gameRepository.updateGame(team);
+        gameRepository.updateNextGame(team);
+        logoRepository.updateLogo(team.getId());
     }
 
     public void refreshTeams()
     {
         teamsRepository.searchTeams();
-    }
-
-    public void updateLogo(final Team team)
-    {
-        logoRepository.updateLogo(team.getId());
     }
 }

@@ -20,6 +20,7 @@ import com.google.gson.GsonBuilder;
 
 import java.text.DateFormat;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +43,8 @@ public class GameRepository
     private final MutableLiveData<Game> game;
     @Getter
     private final MutableLiveData<String> thumbnailUri;
+    @Getter
+    private final MutableLiveData<Game> nextGame;
 
     private static final String HIGHLIGHT_TITLE = "Extended Highlights";
 
@@ -65,12 +68,14 @@ public class GameRepository
         this.gameHighlightsUri = null;
         this.game = null;
         this.thumbnailUri = null;
+        this.nextGame = null;
     }
 
     private GameRepository(final Context context)
     {
         gameHighlightsUri = new MutableLiveData<>();
         game = new MutableLiveData<>();
+        nextGame = new MutableLiveData<>();
         thumbnailUri = new MutableLiveData<>();
 
         final Cache cache = new Cache(context.getFilesDir(), cacheSize);
@@ -89,12 +94,44 @@ public class GameRepository
                 .create(NhlApi.class);
     }
 
+    public void updateNextGame(final Team team)
+    {
+        api.getSchedule(LocalDate.now(), LocalDate.now().plusDays(5), team.getId()).enqueue(
+                new Callback<Schedule>() {
+                    @Override
+                    public void onResponse(final Call<Schedule> call, final Response<Schedule> response) {
+                        if (!response.isSuccessful() || response.body() == null)
+                        {
+                            nextGame.postValue(null);
+                            Log.e("Game repo", "failed to get get schedule for team " + team.getName() + ". Bad response from api.");
+                            return;
+                        }
+                        final Game newGame = response.body().getDates().stream()
+                                .sorted(Comparator.comparing(Date::getDate))
+                                .map(Date::getGames)
+                                .flatMap(List::stream)
+                                .filter(game1 -> game1.getStatus().getAbstractGameState().equalsIgnoreCase("Preview"))
+                                .findFirst()
+                                .orElse(null);
+
+                        nextGame.postValue(newGame);
+                    }
+
+                    @Override
+                    public void onFailure(final Call<Schedule> call, final Throwable t) {
+                        nextGame.postValue(null);
+                        Log.e("Game repo", "failed to process schedule", t);
+                    }
+                }
+        );
+    }
+
     public void updateGame(final Team team)
     {
         api.getSchedule(LocalDate.now().minusDays(5), LocalDate.now(), team.getId()).enqueue(
                 new Callback<Schedule>() {
                     @Override
-                    public void onResponse(Call<Schedule> call, Response<Schedule> response) {
+                    public void onResponse(final Call<Schedule> call, final Response<Schedule> response) {
                         if (!response.isSuccessful() || response.body() == null)
                         {
                             game.postValue(null);
@@ -116,7 +153,7 @@ public class GameRepository
                     }
 
                     @Override
-                    public void onFailure(Call<Schedule> call, Throwable t) {
+                    public void onFailure(final Call<Schedule> call, final Throwable t) {
                         game.postValue(null);
                         updateContent("");
                         Log.e("Game repo", "failed to process schedule", t);
