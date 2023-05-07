@@ -299,11 +299,11 @@ public class TeamSelectorFragment extends Fragment
         final int selectedId = viewModel.getCurrentSelectedTeam().getValue().getId();
         if (teams.getHome().getTeam().getId() == selectedId)
         {
-            return "@ " + getTeamAbbreviation(teams.getAway());
+            return "vs " + getTeamAbbreviation(teams.getAway());
         }
         else
         {
-            return "vs " + getTeamAbbreviation(teams.getHome());
+            return "@ " + getTeamAbbreviation(teams.getHome());
         }
     }
 
