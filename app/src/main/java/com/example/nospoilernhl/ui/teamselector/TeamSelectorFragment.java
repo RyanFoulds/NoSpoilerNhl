@@ -18,6 +18,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -267,26 +268,30 @@ public class TeamSelectorFragment extends Fragment
         }
     }
 
-    private void handleGameChange(final Game newGame, final TextView toChange)
+    private void handleGameChange(@Nullable final Game newGame, final TextView toChange)
     {
-        OffsetDateTime dateTime = null;
-        final Teams teams = newGame.getTeams();
-        try {
-            dateTime = OffsetDateTime.parse(newGame.getGameDate());
-        }
-        catch (NullPointerException npe) {
-            Log.w("TeamSelectorFragment", "No game date found", npe);
-        }
-        catch (DateTimeParseException dtpe) {
-            Log.e("TeamSelectorFragment", "Couldn't parse game date", dtpe);
-        }
-        if (dateTime == null || teams == null || teams.getAway() == null || teams.getHome() == null)
+        if (newGame == null
+                || newGame.getGameDate() == null
+                || newGame.getTeams() == null
+                || newGame.getTeams().getHome() == null
+                || newGame.getTeams().getAway() == null)
         {
             toChange.setText(String.format(NO_GAME_STRING,
                     viewModel.getCurrentSelectedTeam().getValue() == null
                             ? ""
                             : viewModel.getCurrentSelectedTeam().getValue().getTeamName()));
             return;
+        }
+
+
+        OffsetDateTime dateTime;
+        final Teams teams = newGame.getTeams();
+        try {
+            dateTime = OffsetDateTime.parse(newGame.getGameDate());
+        }
+        catch (final NullPointerException | DateTimeParseException dtpe) {
+            Log.e("TeamSelectorFragment", "Couldn't parse game date", dtpe);
+            dateTime = OffsetDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
         }
 
         toChange.setText(String.format(GAME_STRING,
