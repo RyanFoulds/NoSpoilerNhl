@@ -13,6 +13,7 @@ import com.caverock.androidsvg.SVGParseException;
 import com.example.nospoilernhl.R;
 import com.example.nospoilernhl.api.ApiUtils;
 import com.example.nospoilernhl.api.LogoApi;
+import com.example.nospoilernhl.model.Team;
 
 import java.io.IOException;
 
@@ -75,9 +76,10 @@ public class LogoRepository
         currentLogo.postValue(defaultDrawable);
     }
 
-    public void updateLogo(final int teamId)
+    public void updateLogo(final Team team)
     {
-        logoApi.getLogo(teamId).enqueue(new Callback<ResponseBody>() {
+        final String teamAbbreviation = team.getAbbreviation();
+        logoApi.getLogo(teamAbbreviation).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response)
             {
@@ -90,13 +92,13 @@ public class LogoRepository
                     }
                     catch (IOException | SVGParseException e) {
                         currentLogo.postValue(defaultDrawable);
-                        Log.e("LogoRepository", "Could not load logo for teamId " + teamId + ".", e);
+                        Log.e("LogoRepository", "Could not load logo for team " + teamAbbreviation + ".", e);
                     }
                 }
                 else
                 {
                     currentLogo.postValue(defaultDrawable);
-                    Log.e("LogoRepository", "Could not load logo for teamId " + teamId + ", bad response from api.");
+                    Log.e("LogoRepository", "Could not load logo for team " + teamAbbreviation + ", bad response from api.");
                 }
             }
 
