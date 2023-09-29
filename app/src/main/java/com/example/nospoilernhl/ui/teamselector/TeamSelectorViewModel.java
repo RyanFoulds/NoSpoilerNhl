@@ -88,7 +88,7 @@ public class TeamSelectorViewModel extends AndroidViewModel
         currentSelectedTeam.postValue(team);
         gameRepository.updateGame(team);
         gameRepository.updateNextGame(team);
-        logoRepository.updateLogo(team.getId());
+        logoRepository.updateLogo(team);
     }
 
     public void refreshTeams()
