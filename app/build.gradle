@@ -1,15 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 32
-    buildToolsVersion "30.0.3"
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.foulds.nospoilernhl"
         minSdkVersion 28
-        targetSdkVersion 32
-        versionCode 8
-        versionName "1.0.8-SNAPSHOT"
+        targetSdkVersion 33
+        versionCode 9
+        versionName "1.0.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -23,6 +22,7 @@ android {
     compileOptions {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
+        buildToolsVersion = "30.0.3"
     }
 
 }
